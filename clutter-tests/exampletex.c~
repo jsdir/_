@@ -1,0 +1,88 @@
+#include <clutter/clutter.h>
+#include <clutter/x11/clutter-x11.h>
+#include <stdlib.h>
+#include <gmodule.h>
+
+
+// six empty rectangles and our stage
+ClutterActor *stage = NULL;
+ClutterActor *rect1 = NULL;
+CoglHandle   tex    = NULL;
+
+// the create_rect() function needs to create actual rectangles rather than text boxes
+ClutterActor *create_rect() {
+  ClutterActor *rect = clutter_rectangle_new();
+  clutter_actor_set_size(rect, 256, 128);
+  clutter_actor_set_position(rect, 256, 256);
+  clutter_actor_set_anchor_point(rect, 128, 64);
+  clutter_container_add_actor (CLUTTER_CONTAINER (stage), rect);
+  clutter_actor_show (rect);
+
+  return rect;
+}
+
+void move_rect(ClutterActor *rect) {
+  clutter_actor_animate (rect,
+          CLUTTER_EASE_IN_OUT_CUBIC,
+          (rand() / (float)RAND_MAX) * 1000 + 1000,
+          "x", (float)(rand() % 1200),
+          "y", (float)(rand() % 780),
+          "width", (float)(rand() % 600),
+          "height", (float)(rand() % 600),
+          "rotation-angle-z", (float)(rand() % 1080),
+          NULL);
+}
+
+
+// we'll be filling in this function later
+void on_stage_button_press (ClutterStage *stage, ClutterEvent *event, gpointer data) {
+   move_rect(rect1);
+}
+
+static void
+rect_paint (ClutterActor *rect)
+{
+  cogl_set_source_color4ub (0x66, 0x66, 0xdd, 0xff);
+  cogl_rectangle (0, 0, 400, 400);
+  cogl_push_matrix ();
+
+  cogl_set_source_texture (tex);
+  cogl_rectangle_with_texture_coords (0,
+                                      0,
+                                      100,
+                                      100,
+                                      0.0, 0.0, 1.0, 1.0);
+  cogl_pop_matrix ();
+  //g_signal_stop_emission_by_name (rect, "paint");
+}
+
+int main(int argc, char *argv[]) {
+
+  tex = cogl_texture_new_from_file (g_build_filename ("/home/Sommer_Jason/pr/clutter-tests", "redhand.png", NULL),
+                                          COGL_TEXTURE_NONE,
+                                          COGL_PIXEL_FORMAT_ANY,
+                                          NULL);
+  
+  clutter_x11_set_use_argb_visual (TRUE);
+  
+  clutter_init (&argc, &argv);
+
+  stage = clutter_stage_get_default();
+  clutter_stage_set_user_resizable(CLUTTER_STAGE (stage), TRUE);
+  clutter_stage_set_use_alpha(CLUTTER_STAGE (stage), TRUE);
+  clutter_actor_set_opacity(stage, 0);
+  clutter_actor_set_size(stage, 512, 512);
+  g_signal_connect (stage, "destroy", G_CALLBACK (clutter_main_quit), NULL);
+  
+  rect1 = create_rect();
+
+  g_signal_connect (rect1, "paint", G_CALLBACK (rect_paint), NULL);
+
+  g_signal_connect (stage, "button-press-event", G_CALLBACK (on_stage_button_press), NULL);
+  clutter_stage_set_title(CLUTTER_STAGE(stage), "Spinny boxes ahoy!");
+  clutter_actor_show_all (stage);
+
+  clutter_main ();
+
+  return EXIT_SUCCESS;
+}

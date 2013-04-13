@@ -13,7 +13,7 @@ CoglMaterial *material;
 
 // the create_rect() function needs to create actual rectangles rather than text boxes
 ClutterActor *create_rect() {
-  ClutterActor *rect = clutter_rectangle_new();
+  ClutterActor *rect = clutter_rectangle_new_with_color(CLUTTER_COLOR_Transparent);
   clutter_actor_set_size(rect, 256, 128);
   clutter_actor_set_position(rect, 256, 256);
   clutter_actor_set_anchor_point(rect, 128, 64);
@@ -63,9 +63,9 @@ rect_paint (ClutterActor *rect)
 {
   cogl_path_round_rectangle(0.0f, 
                             0.0f, 
-                            clutter_actor_get_width(rect)*2, 
-                            clutter_actor_get_height(rect)*2, 
-                            30.0f, 
+                            clutter_actor_get_width(rect), 
+                            clutter_actor_get_height(rect), 
+                            15.0f, 
                             10.0f);
   // /cogl_path_ellipse(10.0, 10.0f, 500.0f, 500.0f);
   cogl_clip_push_from_path ();
@@ -75,10 +75,10 @@ rect_paint (ClutterActor *rect)
   cogl_rectangle_with_texture_coords (
     0, 
     0, 
-    clutter_actor_get_width(rect)*2, 
-    clutter_actor_get_height(rect)*2,
-    0.0, 0.0, clutter_actor_get_width(rect) / 10.0f, 
-    clutter_actor_get_height(rect) / 10.0f);
+    clutter_actor_get_width(rect), 
+    clutter_actor_get_height(rect),
+    0.0, 0.0, clutter_actor_get_width(rect) / 20.0f, 
+    clutter_actor_get_height(rect) / 20.0f);
   cogl_clip_pop ();
   //g_signal_stop_emission_by_name (rect, "paint");
 }

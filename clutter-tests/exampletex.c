@@ -3,12 +3,11 @@
 #include <stdlib.h>
 #include <cogl/cogl.h>
 
-#define OBJECT_COUNT 1
+#define OBJECT_COUNT 3
 
 // six empty rectangles and our stage
 ClutterActor *stage = NULL;
 ClutterActor *rects[OBJECT_COUNT];
-CoglHandle   tex;
 CoglMaterial *material;
 
 // the create_rect() function needs to create actual rectangles rather than text boxes
@@ -27,12 +26,12 @@ ClutterActor *create_rect() {
 void move_rect(ClutterActor *rect) {
   clutter_actor_animate (rect,
           CLUTTER_EASE_IN_OUT_CUBIC,
-          (rand() / (float)RAND_MAX) * 1000 + 1000,
+          (rand() / (float)RAND_MAX) * 200 + 1000,
           "x", (float)(rand() % 1200),
           "y", (float)(rand() % 780),
-          "width", (float)(rand() % 600),
-          "height", (float)(rand() % 600),
-          "rotation-angle-z", (float)(rand() % 360),
+          "width", (float)(rand() % 300 + 300),
+          "height", (float)(rand() % 200 + 200),
+          //"rotation-angle-z", (float)(rand() % 360),
           NULL);
 }
 
@@ -61,45 +60,100 @@ on_stage_post_paint (ClutterActor *actor)
 static void
 rect_paint (ClutterActor *rect)
 {
-  cogl_path_round_rectangle(0.0f, 
+  float x_1 = 20.0f;
+  float y_1 = 20.0f;
+  float x_2 = clutter_actor_get_width(rect);
+  float y_2 = clutter_actor_get_height(rect);
+  float radius = 8.0f;
+  float arc_step   = 10.0f;
+
+  float t_1 = y_2 - radius * 4;
+
+  cogl_path_move_to(x_1, y_1 + radius);
+  cogl_path_arc(x_1 + radius, y_1 + radius,
+                      radius, radius,
+                      180,
+                      270);
+  
+  cogl_path_line_to(x_2 - radius, y_1);
+  cogl_path_arc(x_2 - radius, y_1 + radius,
+                      radius, radius,
+                      -90,
+                      0);
+  
+  cogl_path_line_to(x_2, y_2 - radius);
+  cogl_path_arc(x_2 - radius, y_2 - radius,
+                      radius, radius,
+                      0,
+                      90);
+
+  cogl_path_line_to(x_1 + radius, y_2);
+  cogl_path_arc(x_1 + radius, y_2 - radius,
+                      radius, radius,
+                      90,
+                      180);
+
+  cogl_path_line_to(x_1, radius * 2 + t_1 * .85);
+  cogl_path_arc(x_1 - 20, radius * 2 + t_1 * .85,
+                      20, 20,
+                      0,
+                      -45);
+  cogl_path_arc(x_1, radius * 2 + t_1 * .85 - 35,
+                      20, 20,
+                      135,
+                      180);
+
+  cogl_path_arc(x_1, radius * 2 + t_1 * .15 + 35,
+                      20, 20,
+                      180,
+                      225);
+  cogl_path_arc(x_1 - 20, radius * 2 + t_1 * .15,
+                      20, 20,
+                      45,
+                      0);
+
+  cogl_path_close();
+
+  /*cogl_path_round_rectangle(0.0f, 
                             0.0f, 
                             clutter_actor_get_width(rect), 
                             clutter_actor_get_height(rect), 
                             15.0f, 
-                            10.0f);
-  // /cogl_path_ellipse(10.0, 10.0f, 500.0f, 500.0f);
+                            10.0f);*/
   cogl_clip_push_from_path ();
 
-  //cogl_set_source_texture (tex);
   cogl_set_source (material);
   cogl_rectangle_with_texture_coords (
     0, 
     0, 
     clutter_actor_get_width(rect), 
     clutter_actor_get_height(rect),
-    0.0, 0.0, clutter_actor_get_width(rect) / 20.0f, 
-    clutter_actor_get_height(rect) / 20.0f);
+    0.0, 0.0, clutter_actor_get_width(rect) / 256.0f, 
+    clutter_actor_get_height(rect) / 256.0f);
   cogl_clip_pop ();
-  //g_signal_stop_emission_by_name (rect, "paint");
 }
 
 int main(int argc, char *argv[]) {
-  gchar *file;
   int index;
+  CoglHandle tex1, tex2;
 
   clutter_x11_set_use_argb_visual (TRUE);
   if (clutter_init (&argc, &argv) != CLUTTER_INIT_SUCCESS)
     return 1;
 
-  //file = g_build_filename ("/home/Sommer_Jason/pr/clutter-tests", "redhand.png", NULL);
-  file = g_build_filename ("/home/Sommer_Jason/Pictures", "moulin.png", NULL);
-  tex  = cogl_texture_new_from_file (file,
+  tex1  = cogl_texture_new_from_file ("noise.png",
                                           COGL_TEXTURE_NONE,
                                           COGL_PIXEL_FORMAT_ANY,
                                           NULL);
+  tex2  = cogl_texture_new_from_file ("light.png",
+                                          COGL_TEXTURE_NONE,
+                                          COGL_PIXEL_FORMAT_ANY,
+                                          NULL);
+
   material = cogl_material_new();
-  cogl_material_set_color4ub(material, 255, 255, 255, 230);
-  cogl_material_set_layer(material, 0, tex);
+  cogl_material_set_color4ub(material, 30, 80, 96, 230);
+  //cogl_material_set_layer(material, 0, tex1);
+  cogl_material_set_layer(material, 10, tex2);
 
   stage = clutter_stage_new();
   clutter_stage_set_user_resizable(CLUTTER_STAGE(stage), TRUE);
